@@ -1,0 +1,44 @@
+package models
+
+import "database/sql"
+
+type {{.Name |tomodelname}} struct {
+	ID int
+  {{- range .Attributes }}
+	{{.Name |snakeToCamel }} {{.Type |sqlToGoType}}
+  {{- end }}
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (m *{{.Name}}) Create(db *sql.DB) error {
+	query := `insert into {{.Name | totablename}} (
+		{{range .Attributes}}{{.Name}},{{end}}
+	) values (
+		{{range .Attributes}}?,{{end}}
+	)`
+	res, err := db.Exec(query, {{range .Attributes}}m.{{.Name | snakeToCamel}},{{end}})
+	if err != nil {
+		return err
+	}
+	id, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
+	m.id = int(id)
+	return nil
+}
+
+func (m *{{.Name}}) Update(db *sql.DB) error {
+	query := `update {{.Name}}
+		set {{range $i, $f := .Attributes}}{{if ne $i 0}},{{end}}{{.Name}}=?{{end}}
+		where id=?`
+	_, err := db.Exec(query, {{range .Attributes}}m.{{.Name |snakeToCamel}},{{end}} m.ID)
+	return err
+}
+
+func (m *{{.Name}}) Destroy(db *sql.DB) error {
+	query := "delete from {{.Name}} where id=?"
+	_, err := db.Exec(query, m.ID)
+	return err
+}

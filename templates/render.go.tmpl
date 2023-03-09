@@ -1,0 +1,49 @@
+package main
+
+import (
+    "fmt"
+    "io/ioutil"
+    "github.com/Joker/jade"
+)
+
+func renderTemplate(templatePath string, data interface{}) (string, error) {
+    // Read the template file contents
+    templateBytes, err := ioutil.ReadFile(templatePath)
+    if err != nil {
+        return "", err
+    }
+
+    // Compile the Pug/Jade template to HTML
+    htmlBytes, err := jade.Parse(templateBytes)
+    if err != nil {
+        return "", err
+    }
+
+    // Convert the HTML bytes to a string and return it
+    return string(htmlBytes), nil
+}
+
+
+func callTmpl() {
+	// Define the data to pass to the template
+	data := map[string]interface{}{
+			"Title": "{{.Name |tomodelname}}",
+			"Content": "foo content"
+			"ID": "int",
+			{{- range .Attributes }}
+			"{{.Name |snakeToCamel }}": "{{.Type |sqlToGoType}}",
+			{{- end }}
+			"CreatedAt", "time.Time",
+			"UpdatedAt", "time.Time",
+	}
+
+	// Render the template and get the HTML
+	html, err := renderTemplate("layout.pug", data)
+	if err != nil {
+			// Handle the error
+			fmt.Println(err)
+			return
+	}
+	// Print the rendered HTML
+	fmt.Println(html)
+}

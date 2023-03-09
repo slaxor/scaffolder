@@ -1,0 +1,8 @@
+create table {{ .Name |totablename }} (
+	id serial primary key,
+	{{- range .Attributes }}
+	{{.Name |camelToSnake}} {{.Type}},
+	{{- end }}
+	created_at timestamp default now(),
+	updated_at timestamp default now()
+)
